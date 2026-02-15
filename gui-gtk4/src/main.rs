@@ -1,26 +1,20 @@
-use adw::{
-    Application, ApplicationWindow, HeaderBar, WindowTitle,
-    gtk::Orientation,
-    prelude::{ApplicationExt, ApplicationExtManual, BoxExt, WidgetExt},
-};
+mod main_window;
+
+use main_window::MainWindow;
+
+use adw::prelude::*;
+use gtk4::prelude::GtkWindowExt;
+use adw::Application;
+
 fn build_ui(application: &Application) {
-    let content = adw::gtk::Box::new(Orientation::Vertical, 0);
-    content.append(
-        &HeaderBar::builder()
-            .title_widget(&WindowTitle::new("asus-control-gui", ""))
-            .build(),
-    );
-    let window = ApplicationWindow::builder()
-        .application(application)
-        .title("asus-control-gui")
-        .default_height(600)
-        .default_width(400)
-        .content(&content)
-        .build();
-    window.show();
+    let window = MainWindow::new(application);
+    GtkWindowExt::present(&window);
 }
+
 pub fn main() {
-    let application = Application::new(Some("dev.uncognic.asus-control-gui"), Default::default());
+    let application = Application::builder()
+        .application_id("com.example.gtk-rss-reader")
+        .build();
 
     application.connect_activate(build_ui);
     application.run();

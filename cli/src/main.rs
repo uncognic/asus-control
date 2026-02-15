@@ -2,32 +2,32 @@ use std::env;
 use std::io::{self, Read, Write};
 use std::os::unix::net::UnixStream;
 
-enum FanProfile {
+enum PlatformProfile {
     Quiet,
     Balanced,
     Performance,
 }
 
-impl FanProfile {
+impl PlatformProfile {
     fn as_str(&self) -> &str {
         match self {
-            FanProfile::Quiet => "quiet",
-            FanProfile::Balanced => "balanced",
-            FanProfile::Performance => "performance",
+            PlatformProfile::Quiet => "quiet",
+            PlatformProfile::Balanced => "balanced",
+            PlatformProfile::Performance => "performance",
         }
     }
 }
 
 enum Command {
     BatteryThreshold(i32),
-    FanMode(FanProfile),
+    Profile(PlatformProfile),
 }
 
 impl Command {
     fn variants() -> &'static [&'static str] {
         &[
             "battery-threshold <num>",
-            "fanmode <quiet|balanced|performance>",
+            "profile <quiet|balanced|performance>",
         ]
     }
 
@@ -51,15 +51,15 @@ impl Command {
             }
             return Err(());
         }
-        if first == "fanmode" {
+        if first == "profile" {
             if let Some(arg) = parts.next() {
                 let profile = match arg {
-                    "quiet" => FanProfile::Quiet,
-                    "balanced" => FanProfile::Balanced,
-                    "performance" => FanProfile::Performance,
+                    "quiet" => PlatformProfile::Quiet,
+                    "balanced" => PlatformProfile::Balanced,
+                    "performance" => PlatformProfile::Performance,
                     _ => return Err(()),
                 };
-                return Ok(Command::FanMode(profile));
+                return Ok(Command::Profile(profile));
             }
             return Err(());
         }
@@ -70,7 +70,7 @@ impl Command {
     fn to_string(&self) -> String {
         match self {
             Command::BatteryThreshold(n) => format!("battery-threshold {}", n),
-            Command::FanMode(profile) => format!("fanmode {}", profile.as_str()),
+            Command::Profile(profile) => format!("profile {}", profile.as_str()),
         }
     }
 }

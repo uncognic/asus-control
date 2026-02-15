@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 
 #[derive(Debug)]
-enum FanProfile {
+enum PlatformProfile {
     Quiet,
     Balanced,
     Performance,
@@ -65,12 +65,12 @@ fn handle_command(cmd: &str) -> String {
             return "error: invalid battery threshold".into();
         }
     }
-    if cmd.starts_with("fanmode") {
+    if cmd.starts_with("profile") {
         if let Some(arg) = cmd.split_whitespace().nth(1) {
             let profile = match arg {
-                "quiet" => Some(FanProfile::Quiet),
-                "balanced" => Some(FanProfile::Balanced),
-                "performance" => Some(FanProfile::Performance),
+                "quiet" => Some(PlatformProfile::Quiet),
+                "balanced" => Some(PlatformProfile::Balanced),
+                "performance" => Some(PlatformProfile::Performance),
                 _ => None,
             };
             if let Some(p) = profile {
@@ -79,10 +79,10 @@ fn handle_command(cmd: &str) -> String {
                     Err(e) => return format!("error: {}", e),
                 }
             } else {
-                return "error: invalid fanmode".into();
+                return "error: invalid profile".into();
             }
         } else {
-            return "error: fanmode requires argument".into();
+            return "error: profile requires argument".into();
         }
     }
 
@@ -100,13 +100,16 @@ fn set_battery_threshold(value: i32) -> Result<String, String> {
     Ok(format!("Battery threshold set to {}", value))
 }
 
-fn set_fan_mode(profile: FanProfile) -> Result<String, String> {
+fn set_fan_mode(profile: PlatformProfile) -> Result<String, String> {
     let desc = match profile {
-        FanProfile::Quiet => "quiet",
-        FanProfile::Balanced => "balanced",
-        FanProfile::Performance => "performance",
+        PlatformProfile::Quiet => "quiet",
+        PlatformProfile::Balanced => "balanced",
+        PlatformProfile::Performance => "performance",
     };
-    // do fan stuff here
-    println!("fan mode set to {}", desc);
+
+    let path = "/sys/firmware/acpi/platform_profile";
+    std::fs::write(path, desc)
+        .map_err(|e| format!("failed to write {}: {}", path, e))?;
+
     Ok(format!("fan mode set to {}", desc))
 }

@@ -16,7 +16,7 @@ fn main() -> std::io::Result<()> {
     let _ = std::fs::remove_file(socket_path);
 
     let listener = UnixListener::bind(socket_path)?;
-    // fs::set_permissions(socket_path, fs::Permissions::from_mode(0o660))?;
+    fs::set_permissions(socket_path, fs::Permissions::from_mode(0o660))?;
     println!("asus-control-daemon listening on {}", socket_path);
 
     for stream in listener.incoming() {

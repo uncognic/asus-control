@@ -114,5 +114,5 @@ fn set_fan_mode(profile: PlatformProfile) -> Result<String, String> {
     std::fs::write(path, desc)
         .map_err(|e| format!("failed to write {}: {}", path, e))?;
 
-    Ok(format!("fan mode set to {}", desc))
+    Ok(format!("Profile set to {}", desc))
 }

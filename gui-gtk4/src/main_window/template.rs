@@ -13,6 +13,7 @@ use std::cell::RefCell;
 use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::thread;
 
 #[derive(CompositeTemplate, Default)]
@@ -28,6 +29,8 @@ pub struct MainWindowTemplate {
     pub battery_slider: TemplateChild<Scale>,
     #[template_child]
     pub battery_value: TemplateChild<Label>,
+    #[template_child]
+    pub fan_rpm_label: TemplateChild<Label>,
 }
 
 #[object_subclass]
@@ -75,6 +78,7 @@ impl ObjectImpl for MainWindowTemplate {
             });
 
         let slider = self.battery_slider.get();
+        let fan_rpm_label = self.fan_rpm_label.get();
 
         let (tx, rx) = std::sync::mpsc::channel::<i32>();
         thread::spawn(
@@ -90,6 +94,8 @@ impl ObjectImpl for MainWindowTemplate {
                         eprintln!("Failed to read from daemon: {}", e);
                     } else if let Ok(n) = resp.trim().parse::<i32>() {
                         let _ = tx.send(n);
+                    } else {
+                        eprintln!("Daemon response for get battery-threshold: {}", resp);
                     }
                 }
                 Err(e) => {
@@ -118,6 +124,53 @@ impl ObjectImpl for MainWindowTemplate {
             Err(std::sync::mpsc::TryRecvError::Empty) => true.into(),
             Err(std::sync::mpsc::TryRecvError::Disconnected) => false.into(),
         });
+
+        let (fr_tx, fr_rx) = std::sync::mpsc::channel::<String>();
+        let fetch_fan_rpm: Arc<dyn Fn() + Send + Sync + 'static> = Arc::new(move || {
+            let fr_tx = fr_tx.clone();
+            thread::spawn(
+                move || match UnixStream::connect("/run/asus-control-daemon.sock") {
+                    Ok(mut stream) => {
+                        if let Err(e) = stream.write_all(b"get fan-speed-rpm\n") {
+                            eprintln!("Failed to write to daemon: {}", e);
+                            return;
+                        }
+                        let _ = stream.shutdown(std::net::Shutdown::Write);
+                        let mut resp = String::new();
+                        if let Err(e) = stream.read_to_string(&mut resp) {
+                            eprintln!("Failed to read from daemon: {}", e);
+                        } else {
+                            println!("Daemon response for get fan-speed-rpm: {}", resp.trim());
+                            let _ = fr_tx.send(resp);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to connect to daemon socket: {}", e);
+                    }
+                },
+            );
+        });
+        fetch_fan_rpm();
+
+        let fetch_fan_rpm_for_timer = fetch_fan_rpm.clone();
+        let _fan_rpm_timer = glib::timeout_add_local(
+            std::time::Duration::from_secs(5),
+            move || {
+                fetch_fan_rpm_for_timer();
+                true.into()
+            },
+        );
+
+        let fan_rpm_label_for_idle = fan_rpm_label.clone();
+        let _fan_rpm_setter = glib::idle_add_local(move || match fr_rx.try_recv() {
+            Ok(s) => {
+                let rpm = s.trim();
+                fan_rpm_label_for_idle.set_label(&format!("Fans: {} RPM", rpm));
+                false.into()
+            }
+            Err(std::sync::mpsc::TryRecvError::Empty) => true.into(),
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => false.into(),
+        });
         let slider_for_send = self.battery_slider.get();
         let silent_btn = self.btn_silent.get();
         let balanced_btn = self.btn_balanced.get();
@@ -136,6 +189,7 @@ impl ObjectImpl for MainWindowTemplate {
                     if let Err(e) = stream.read_to_string(&mut resp) {
                         eprintln!("Failed to read from daemon: {}", e);
                     } else {
+                        println!("Daemon response for get profile: {}", resp.trim());
                         let _ = ptx.send(resp);
                     }
                 }

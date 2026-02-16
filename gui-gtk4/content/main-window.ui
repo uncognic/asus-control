@@ -13,6 +13,15 @@
           </object>
         </child>
         <child>
+          <object class="GtkLabel" id="fan_rpm_label">
+            <property name="label">Fans: --</property>
+            <property name="halign">start</property>
+            <property name="margin-top">6</property>
+            <property name="margin-start">6</property>
+            <property name="margin-end">6</property>
+          </object>
+        </child>
+        <child>
           <object class="GtkBox">
             <property name="orientation">horizontal</property>
             <property name="homogeneous">True</property>

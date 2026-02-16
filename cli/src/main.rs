@@ -23,6 +23,7 @@ enum Command {
     SetProfile(PlatformProfile),
     GetBatteryThreshold,
     GetProfile,
+    GetFanSpeedRpm,
 }
 
 impl Command {
@@ -32,6 +33,7 @@ impl Command {
             "set profile <quiet|balanced|performance>",
             "get profile",
             "get battery-threshold",
+            "get fan-speed-rpm",
         ]
     }
 
@@ -66,6 +68,7 @@ impl Command {
             "get" => match parts.next() {
                 Some("battery-threshold") => Ok(Command::GetBatteryThreshold),
                 Some("profile") => Ok(Command::GetProfile),
+                Some("fan-speed-rpm") => Ok(Command::GetFanSpeedRpm),
                 _ => Err(()),
             },
             _ => Err(()),
@@ -78,6 +81,7 @@ impl Command {
             Command::SetProfile(profile) => format!("set profile {}", profile.as_str()),
             Command::GetBatteryThreshold => "get battery-threshold".into(),
             Command::GetProfile => "get profile".into(),
+            Command::GetFanSpeedRpm => "get fan-speed-rpm".into(),
         }
     }
 }

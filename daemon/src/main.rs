@@ -103,6 +103,12 @@ fn handle_command(cmd: &str) -> String {
                         Err(e) => format!("error: {}", e),
                     };
                 }
+                Some("fan-speed-rpm") => {
+                    return match get_fan_speed_rpm() {
+                        Ok(m) => m,
+                        Err(e) => format!("error: {}", e),
+                    };
+                }
                 Some(other) => return format!("error: unknown get target: {}", other),
                 None => return "error: get requires a target".into(),
             }
@@ -121,6 +127,12 @@ fn get_battery_threshold() -> Result<String, String> {
 
 fn get_fan_profile() -> Result<String, String> {
     let path = "/sys/firmware/acpi/platform_profile";
+    let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
+    Ok(format!("{}", s.trim()))
+}
+
+fn get_fan_speed_rpm() -> Result<String, String> {
+    let path = "/sys/class/hwmon/hwmon1/fan1_input";
     let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
     Ok(format!("{}", s.trim()))
 }

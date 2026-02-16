@@ -183,7 +183,7 @@ impl ObjectImpl for MainWindowTemplate {
         let pending_clone = pending.clone();
         slider_for_send.connect_value_changed(move |s| {
             let v = s.value() as i32;
-            value_label.set_label(&format!("{}", v));
+            value_label.set_label(&format!("{}%", v));
 
             if let Some(id) = pending_clone.borrow_mut().take() {
                 id.remove();

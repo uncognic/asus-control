@@ -13,7 +13,7 @@ fn build_ui(application: &Application) {
 
 pub fn main() {
     let application = Application::builder()
-        .application_id("com.example.gtk-rss-reader")
+        .application_id("dev.uncognic.asus-control-gui")
         .build();
 
     application.connect_activate(build_ui);

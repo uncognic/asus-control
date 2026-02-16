@@ -19,58 +19,65 @@ impl PlatformProfile {
 }
 
 enum Command {
-    BatteryThreshold(i32),
-    Profile(PlatformProfile),
+    SetBatteryThreshold(i32),
+    SetProfile(PlatformProfile),
+    GetBatteryThreshold,
+    GetProfile,
 }
 
 impl Command {
     fn variants() -> &'static [&'static str] {
         &[
-            "battery-threshold <num>",
-            "profile <quiet|balanced|performance>",
+            "set battery-threshold <num>",
+            "set profile <quiet|balanced|performance>",
+            "get profile",
+            "get battery-threshold",
         ]
     }
 
     fn parse(input: &str) -> Result<Command, ()> {
         let mut parts = input.split_whitespace();
-        let first = parts.next().unwrap_or("");
+        let verb = parts.next().unwrap_or("");
 
-        if first.starts_with("battery-threshold") {
-            let suffix = &first["battery-threshold".len()..];
-            if !suffix.is_empty() {
-                if let Ok(n) = suffix.parse::<i32>() {
-                    return Ok(Command::BatteryThreshold(n));
-                } else {
-                    return Err(());
+        match verb {
+            "set" => match parts.next() {
+                Some("battery-threshold") => {
+                    if let Some(nstr) = parts.next() {
+                        if let Ok(n) = nstr.parse::<i32>() {
+                            return Ok(Command::SetBatteryThreshold(n));
+                        }
+                    }
+                    Err(())
                 }
-            }
-            if let Some(nstr) = parts.next() {
-                if let Ok(n) = nstr.parse::<i32>() {
-                    return Ok(Command::BatteryThreshold(n));
+                Some("profile") => {
+                    if let Some(arg) = parts.next() {
+                        let profile = match arg {
+                            "quiet" => PlatformProfile::Quiet,
+                            "balanced" => PlatformProfile::Balanced,
+                            "performance" => PlatformProfile::Performance,
+                            _ => return Err(()),
+                        };
+                        return Ok(Command::SetProfile(profile));
+                    }
+                    Err(())
                 }
-            }
-            return Err(());
+                _ => Err(()),
+            },
+            "get" => match parts.next() {
+                Some("battery-threshold") => Ok(Command::GetBatteryThreshold),
+                Some("profile") => Ok(Command::GetProfile),
+                _ => Err(()),
+            },
+            _ => Err(()),
         }
-        if first == "profile" {
-            if let Some(arg) = parts.next() {
-                let profile = match arg {
-                    "quiet" => PlatformProfile::Quiet,
-                    "balanced" => PlatformProfile::Balanced,
-                    "performance" => PlatformProfile::Performance,
-                    _ => return Err(()),
-                };
-                return Ok(Command::Profile(profile));
-            }
-            return Err(());
-        }
-
-        Err(())
     }
 
     fn to_string(&self) -> String {
         match self {
-            Command::BatteryThreshold(n) => format!("battery-threshold {}", n),
-            Command::Profile(profile) => format!("profile {}", profile.as_str()),
+            Command::SetBatteryThreshold(n) => format!("set battery-threshold {}", n),
+            Command::SetProfile(profile) => format!("set profile {}", profile.as_str()),
+            Command::GetBatteryThreshold => "get battery-threshold".into(),
+            Command::GetProfile => "get profile".into(),
         }
     }
 }

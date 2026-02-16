@@ -44,52 +44,85 @@ fn main() -> std::io::Result<()> {
 
 fn handle_command(cmd: &str) -> String {
     let cmd = cmd.trim();
+    let mut parts = cmd.split_whitespace();
+    let verb = match parts.next() {
+        Some(v) => v,
+        None => return "error: empty command".into(),
+    };
 
-    if cmd.starts_with("battery-threshold") {
-        let after = &cmd["battery-threshold".len()..].trim();
-        let n_opt = if !after.is_empty() {
-            after.parse::<i32>().ok()
-        } else {
-            None
-        };
-
-        let n_opt = n_opt.or_else(|| {
-            cmd.split_whitespace()
-                .nth(1)
-                .and_then(|s| s.parse::<i32>().ok())
-        });
-
-        if let Some(n) = n_opt {
-            match set_battery_threshold(n) {
-                Ok(msg) => return msg,
-                Err(e) => return format!("error: {}", e),
-            }
-        } else {
-            return "error: invalid battery threshold".into();
-        }
-    }
-    if cmd.starts_with("profile") {
-        if let Some(arg) = cmd.split_whitespace().nth(1) {
-            let profile = match arg {
-                "quiet" => Some(PlatformProfile::Quiet),
-                "balanced" => Some(PlatformProfile::Balanced),
-                "performance" => Some(PlatformProfile::Performance),
-                _ => None,
-            };
-            if let Some(p) = profile {
-                match set_fan_mode(p) {
-                    Ok(msg) => return msg,
-                    Err(e) => return format!("error: {}", e),
+    match verb {
+        "set" => {
+            match parts.next() {
+                Some("battery-threshold") => {
+                    if let Some(arg) = parts.next() {
+                        if let Ok(n) = arg.parse::<i32>() {
+                            return match set_battery_threshold(n) {
+                                Ok(m) => m,
+                                Err(e) => format!("error: {}", e),
+                            };
+                        } else {
+                            return "error: invalid battery threshold".into();
+                        }
+                    }
+                    return "error: battery-threshold requires a value".into();
                 }
-            } else {
-                return "error: invalid profile".into();
+                Some("profile") => {
+                    if let Some(arg) = parts.next() {
+                        let profile = match arg {
+                            "quiet" => Some(PlatformProfile::Quiet),
+                            "balanced" => Some(PlatformProfile::Balanced),
+                            "performance" => Some(PlatformProfile::Performance),
+                            _ => None,
+                        };
+                        if let Some(p) = profile {
+                            return match set_fan_mode(p) {
+                                Ok(m) => m,
+                                Err(e) => format!("error: {}", e),
+                            };
+                        } else {
+                            return "error: invalid profile".into();
+                        }
+                    }
+                    return "error: profile requires an argument".into();
+                }
+                Some(other) => return format!("error: unknown set target: {}", other),
+                None => return "error: set requires a target".into(),
             }
-        } else {
-            return "error: profile requires argument".into();
+        }
+        "get" => {
+            match parts.next() {
+                Some("battery-threshold") => {
+                    return match get_battery_threshold() {
+                        Ok(m) => m,
+                        Err(e) => format!("error: {}", e),
+                    };
+                }
+                Some("profile") => {
+                    return match get_fan_profile() {
+                        Ok(m) => m,
+                        Err(e) => format!("error: {}", e),
+                    };
+                }
+                Some(other) => return format!("error: unknown get target: {}", other),
+                None => return "error: get requires a target".into(),
+            }
+        }
+        _ => {
+            return "error: unknown command - use 'get' or 'set'".into();
         }
     }
+}
 
-    "unknown command".into()
+fn get_battery_threshold() -> Result<String, String> {
+    let path = "/sys/class/power_supply/BAT0/charge_control_end_threshold";
+    let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
+    Ok(format!("battery-threshold {}", s.trim()))
+}
+
+fn get_fan_profile() -> Result<String, String> {
+    let path = "/sys/firmware/acpi/platform_profile";
+    let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
+    Ok(format!("profile {}", s.trim()))
 }
 
 fn set_battery_threshold(value: i32) -> Result<String, String> {

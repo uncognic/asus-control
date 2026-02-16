@@ -70,17 +70,17 @@ impl ObjectImpl for MainWindowTemplate {
 
         let silent = self.btn_silent.get();
         silent.connect_clicked(move |_btn| {
-            send("profile quiet\n");
+            send("set profile quiet\n");
         });
 
         let balanced = self.btn_balanced.get();
         balanced.connect_clicked(move |_btn| {
-            send("profile balanced\n");
+            send("set profile balanced\n");
         });
 
         let performance = self.btn_performance.get();
         performance.connect_clicked(move |_btn| {
-            send("profile performance\n");
+            send("set profile performance\n");
         });
     }
 }

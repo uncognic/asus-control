@@ -13,4 +13,11 @@ if ! id -nG "$USER" | grep -qw "asus-control"; then
     exec newgrp asus-control
 fi
 
-echo "Group setup compplete"
+if ! id -nG "$USER" | grep -qw "input"; then
+    echo "Adding $USER to group input..."
+    sudo usermod -aG "input" "$USER"
+    echo "Running newgrp input to apply group changes..."
+    exec newgrp input
+fi
+echo "You may need to restart for group changes to take effect."
+echo "Group setup complete"

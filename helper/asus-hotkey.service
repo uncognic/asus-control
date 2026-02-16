@@ -1,0 +1,14 @@
+# ~/.config/systemd/user/asus-hotkey.service
+[Unit]
+Description=MyASUS hotkey launcher
+After=graphical.target
+
+[Service]
+ExecStart=%h/.local/bin/asus-hotkey
+Restart=always
+Environment=DISPLAY=%DISPLAY%
+Environment=XAUTHORITY=%XAUTHORITY%
+Environment=XDG_RUNTIME_DIR=%XDG_RUNTIME_DIR%
+
+[Install]
+WantedBy=default.target

@@ -116,13 +116,13 @@ fn handle_command(cmd: &str) -> String {
 fn get_battery_threshold() -> Result<String, String> {
     let path = "/sys/class/power_supply/BAT0/charge_control_end_threshold";
     let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
-    Ok(format!("battery-threshold {}", s.trim()))
+    Ok(format!("{}", s.trim()))
 }
 
 fn get_fan_profile() -> Result<String, String> {
     let path = "/sys/firmware/acpi/platform_profile";
     let s = std::fs::read_to_string(path).map_err(|e| format!("failed to read {}: {}", path, e))?;
-    Ok(format!("profile {}", s.trim()))
+    Ok(format!("{}", s.trim()))
 }
 
 fn set_battery_threshold(value: i32) -> Result<String, String> {

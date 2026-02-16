@@ -22,7 +22,7 @@
             <property name="margin-start">6</property>
             <property name="margin-end">6</property>
             <child>
-              <object class="GtkButton" id="btn_silent">
+              <object class="GtkToggleButton" id="btn_silent">
                 <property name="label">Silent</property>
                 <property name="hexpand">True</property>
                 <property name="height-request">96</property>
@@ -33,7 +33,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="btn_balanced">
+              <object class="GtkToggleButton" id="btn_balanced">
                 <property name="label">Balanced</property>
                 <property name="hexpand">True</property>
                 <property name="height-request">96</property>
@@ -44,7 +44,7 @@
               </object>
             </child>
             <child>
-              <object class="GtkButton" id="btn_performance">
+              <object class="GtkToggleButton" id="btn_performance">
                 <property name="label">Performance</property>
                 <property name="hexpand">True</property>
                 <property name="height-request">96</property>
@@ -52,6 +52,49 @@
                 <property name="margin-end">3</property>
                 <property name="margin-top">3</property>
                 <property name="margin-bottom">3</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="hexpand">True</property>
+            <property name="margin-top">6</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">horizontal</property>
+                <property name="hexpand">True</property>
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="label">Battery limit</property>
+                    <property name="halign">start</property>
+                    <property name="margin-start">6</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="battery_value">
+                    <property name="label">--</property>
+                    <property name="halign">end</property>
+                    <property name="margin-end">6</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkScale" id="battery_slider">
+                <property name="hexpand">True</property>
+                <property name="orientation">horizontal</property>
+                <property name="adjustment">
+                  <object class="GtkAdjustment">
+                    <property name="lower">0</property>
+                    <property name="upper">100</property>
+                    <property name="step-increment">1</property>
+                    <property name="page-increment">10</property>
+                    <property name="page-size">0</property>
+                  </object>
+                </property>
               </object>
             </child>
           </object>
